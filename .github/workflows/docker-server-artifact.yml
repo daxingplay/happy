@@ -10,17 +10,6 @@ on:
       - 'packages/happy-server/**'
       - 'packages/happy-wire/**'
       - '.github/workflows/docker-server-artifact.yml'
-  push:
-    branches:
-      - main
-    paths:
-      - 'Dockerfile.server'
-      - 'package.json'
-      - 'yarn.lock'
-      - 'scripts/**'
-      - 'packages/happy-server/**'
-      - 'packages/happy-wire/**'
-      - '.github/workflows/docker-server-artifact.yml'
   workflow_dispatch:
 
 jobs:
