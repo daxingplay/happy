@@ -1,0 +1,61 @@
+name: Build server Docker image artifact
+
+on:
+  pull_request:
+    paths:
+      - 'Dockerfile.server'
+      - 'package.json'
+      - 'yarn.lock'
+      - 'scripts/**'
+      - 'packages/happy-server/**'
+      - 'packages/happy-wire/**'
+      - '.github/workflows/docker-server-artifact.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'Dockerfile.server'
+      - 'package.json'
+      - 'yarn.lock'
+      - 'scripts/**'
+      - 'packages/happy-server/**'
+      - 'packages/happy-wire/**'
+      - '.github/workflows/docker-server-artifact.yml'
+  workflow_dispatch:
+
+jobs:
+  build-server-image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build server image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile.server
+          platforms: linux/amd64
+          load: true
+          tags: happy-server:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Save image as tar archive
+        run: |
+          docker image inspect happy-server:${{ github.sha }}
+          docker save happy-server:${{ github.sha }} | gzip > happy-server-image-${{ github.sha }}.tar.gz
+          ls -lh happy-server-image-${{ github.sha }}.tar.gz
+
+      - name: Upload Docker image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: happy-server-image-${{ github.sha }}
+          path: happy-server-image-${{ github.sha }}.tar.gz
+          if-no-files-found: error
+          retention-days: 14
